@@ -11,11 +11,47 @@
 const gCalAPI = require('./googleCalAPI.js');
 const dateCalcs = require('./dateCalcs.js');
 const fs = require('fs');
+const express = require('express');
+const app = express();
+const http = require('http');
+
+const port = 8080;
 
 // Set start and end date to determine what events to retrieve
 const startDate = new Date('2017-10-24'); 
 const endDate = new Date('2017-10-26');
 endDate.setDate(endDate.getDate() + 1);
+
+
+app.get('/', (request, response) => {     
+    response.send('working \n');
+});
+
+app.get('/getCredentials', (request, response) => {     
+    text = gCalAPI.getGoogleAuth();
+    response.send(text);
+});
+
+app.get('/storeCredentials', (request, response) => {     
+    
+        response.send('you are logged in');
+    });
+
+app.get('/login/:id', (request, response) => { 
+    const id = request.params.id;
+    
+
+
+    response.send('you are logged in');
+});
+
+app.get('/myFreeTime', (request, response) => { 
+    
+    response.send('your free time is:...');
+});
+
+console.log('listening on port:' + port);
+app.listen(port);
 
 /* Note: User has three options for using Google Cal API callbacks. 
 * 1. Use gCalAPI.getEvents with a callback to do anything user pleases
@@ -44,7 +80,7 @@ endDate.setDate(endDate.getDate() + 1);
 
 ////////// Option 3 ////////////
 
-localGetEvents('./events.json', function(events) { dateCalcs.findFreeTime(events, startDate, endDate) });
+// localGetEvents('./events.json', function(events) { dateCalcs.findFreeTime(events, startDate, endDate) });
 
 function localGetEvents(eventFile, callback) {
     // load file

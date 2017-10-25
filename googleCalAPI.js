@@ -2,6 +2,7 @@ var fs = require('fs');
 var readline = require('readline');
 var google = require('googleapis');
 var googleAuth = require('google-auth-library');
+const express = require('express');
 
 //TODO: get all calendars and let user select which call 
 //TODO: enable passing of which user to select. By passing credential location
@@ -11,77 +12,32 @@ var googleAuth = require('google-auth-library');
 var SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
 //var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE) + '/.credentials/';
 var TOKEN_DIR = './credentials/';
-var TOKEN_PATH = TOKEN_DIR + 'calendar-nodejs-quickstart.json';
+var TOKEN_PATH = TOKEN_DIR + 'userToken.json';
 
 let start; //format: "2017-10-17"
 let end;
 
 //Main API call to get calendar events
 // Parameters: start days, end days
-module.exports.getEvents = function getEvents(startDate, endDate, callback){
-  start = startDate;
-  end = endDate;
-  // Load client secrets from a local file.
-  fs.readFile('client_secret.json', function processClientSecrets(err, content) {
-    if (err) {
-      console.log('Error loading client secret file: ' + err);
-      return;
-    }
-    // Authorize a client with the loaded credentials, then call the
-    // Google Calendar API.
-    authorize(JSON.parse(content), listEvents, callback);
+exports.getEvents = function getEvents(startDate, endDate, callback){
+  authorizeServer(function(oauth2Client) { 
+    authorizeUser(oauth2Client, function (userToken) {
+      listEvents(userToken, callback)
+    });
   });
 }
 
-/**
- * Create an OAuth2 client with the given credentials, and then execute the
- * given callback function.
- *
- * @param {Object} credentials The authorization client credentials.
- * @param {function} callback The callback to call with the authorized client.
- */
-function authorize(credentials, apiCallback, userCallback) {
-  var clientSecret = credentials.installed.client_secret;
-  var clientId = credentials.installed.client_id;
-  var redirectUrl = credentials.installed.redirect_uris[0];
-  var auth = new googleAuth();
-  var oauth2Client = new auth.OAuth2(clientId, clientSecret, redirectUrl);
-
-  // Check if we have previously stored a token.
-  fs.readFile(TOKEN_PATH, function(err, token) {
-    if (err) {
-      getNewToken(oauth2Client, callback);
-      console.log('getting new token');
-    } else {
-      oauth2Client.credentials = JSON.parse(token);
-      console.log('accessing token from path :' + TOKEN_PATH);
-      
-      // call the passed function with the authorization
-      apiCallback(oauth2Client, userCallback);
-    }
-  });
+exports.getGoogleAuth = function getGoogleAuth() {
+  authorizeServer(function(oauth2Client) {
+    var authUrl = oauth2Client.generateAuthUrl({
+      access_type: 'offline',
+      scope: SCOPES
+    });
+    return 'Authorize this app by visiting this url and copying the code from that page below: ' + authUrl;
+  });  
 }
-
-/**
- * Get and store new token after prompting for user authorization, and then
- * execute the given callback with the authorized OAuth2 client.
- *
- * @param {google.auth.OAuth2} oauth2Client The OAuth2 client to get token for.
- * @param {getEventsCallback} callback The callback to call with the authorized
- *     client.
- */
-function getNewToken(oauth2Client, callback) {
-  var authUrl = oauth2Client.generateAuthUrl({
-    access_type: 'offline',
-    scope: SCOPES
-  });
-  console.log('Authorize this app by visiting this url: ', authUrl);
-  var rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-  });
-  rl.question('Enter the code from that page here: ', function(code) {
-    rl.close();
+  
+  exports.getNewToken = function getNewToken(oauth2Client, code) {
     oauth2Client.getToken(code, function(err, token) {
       if (err) {
         console.log('Error while trying to retrieve access token', err);
@@ -89,10 +45,125 @@ function getNewToken(oauth2Client, callback) {
       }
       oauth2Client.credentials = token;
       storeToken(token);
-      callback(oauth2Client);
     });
+  }
+  
+// function authorizeServer(apiCallback, userCallback) {
+//   fs.readFile('client_secret.json', function processClientSecrets(err, content) {
+//     if (err) {
+//       console.log('Error loading client secret file: ' + err);
+//       return;
+//     }
+//     var credentials = JSON.parse(content);
+
+//     // Authorize a client with the loaded credentials, then call the Google Calendar API.
+//     var clientSecret = credentials.installed.client_secret;
+//     var clientId = credentials.installed.client_id;
+//     var redirectUrl = credentials.installed.redirect_uris[0];
+//     var auth = new googleAuth();
+//     var oauth2Client = new auth.OAuth2(clientId, clientSecret, redirectUrl);
+
+//     authorizeUser(oauth2Client, apiCallback, userCallback);
+//   });
+// }
+
+function authorizeServer(callback) {
+  fs.readFile('client_secret.json', function processClientSecrets(err, content) {
+    if (err) {
+      console.log('Error loading client secret file: ' + err);
+      return;
+    }
+    var credentials = JSON.parse(content);
+
+    // Authorize a client with the loaded credentials, then call the Google Calendar API.
+    var clientSecret = credentials.installed.client_secret;
+    var clientId = credentials.installed.client_id;
+    var redirectUrl = credentials.installed.redirect_uris[0];
+    var auth = new googleAuth();
+    var oauth2Client = new auth.OAuth2(clientId, clientSecret, redirectUrl);
+
+    callback(oauth2Client);
   });
 }
+
+// /**
+//  * Create an OAuth2 client with the given credentials, and then execute the
+//  * given callback function.
+//  *
+//  * @param {Object} credentials The authorization client credentials.
+//  * @param {function} callback The callback to call with the authorized client.
+//  */
+// function authorizeUser(oauth2Client, callback) {
+//   // TODO: this should become user login.
+
+//   // Check if we have previously stored a token.
+//   fs.readFile(TOKEN_PATH, function(err, token) {
+//     if (err) {
+//       console.log('No token found. Getting new token.');
+//       getNewToken(oauth2Client, apiCallback);
+    
+//     } else {
+//       oauth2Client.credentials = JSON.parse(token);
+//       console.log('Token found. Accessing token from path :' + TOKEN_PATH);
+      
+//       // call the passed function with the authorization
+//       callback(oauth2Client);
+//     }
+//   });
+// }
+
+function authorizeUser(oauth2Client, callback) {
+  // TODO: this should become user login.
+
+  // Check if we have previously stored a token.
+  fs.readFile(TOKEN_PATH, function(err, token) {
+    if (err) {
+      console.log('No token found. please go to get new token path.');
+      // getNewToken(oauth2Client, apiCallback);
+    
+    } else {
+      oauth2Client.credentials = JSON.parse(token);
+      console.log('Token found. Accessing token from path :' + TOKEN_PATH);
+      
+      // call the passed function with the authorization
+      callback(oauth2Client);
+    }
+  });
+}
+
+
+// /**
+//  * Get and store new token after prompting for user authorization, and then
+//  * execute the given callback with the authorized OAuth2 client.
+//  *
+//  * @param {google.auth.OAuth2} oauth2Client The OAuth2 client to get token for.
+//  * @param {getEventsCallback} callback The callback to call with the authorized
+//  *     client.
+//  */
+// function getNewToken(oauth2Client, callback) {
+//   var authUrl = oauth2Client.generateAuthUrl({
+//     access_type: 'offline',
+//     scope: SCOPES
+//   });
+//   console.log('Authorize this app by visiting this url: ', authUrl);
+//   var rl = readline.createInterface({
+//     input: process.stdin,
+//     output: process.stdout
+//   });
+//   rl.question('Enter the code from that page here: ', function(code) {
+//     rl.close();
+//     oauth2Client.getToken(code, function(err, token) {
+//       if (err) {
+//         console.log('Error while trying to retrieve access token', err);
+//         return;
+//       }
+//       oauth2Client.credentials = token;
+//       storeToken(token);
+//       callback(oauth2Client);
+//     });
+//   });
+// }
+
 
 /**
  * Store token to disk be used in later program executions.
