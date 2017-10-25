@@ -1,0 +1,23 @@
+{
+  "name": "archengproject",
+  "version": "1.0.0",
+  "description": "Use Alexa to find free time among friends and co-workers",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tyleris/archEngProject.git"
+  },
+  "author": "Lwin & Tyler",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tyleris/archEngProject/issues"
+  },
+  "homepage": "https://github.com/tyleris/archEngProject#readme",
+  "dependencies": {
+    "google-auth-library": "^0.11.0",
+    "googleapis": "^22.2.0"
+  }
+}
