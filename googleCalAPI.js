@@ -122,12 +122,12 @@ function storeToken(token) {
  */
 function listEvents(auth, callback) {
   var calendar = google.calendar('v3');
-  console.log('start: ' + start + ' end: ' + end);
+  console.log('Getting calendar events from dates: ' + JSON.stringify(start) + ' to: ' + JSON.stringify(end));
   calendar.events.list({
     auth: auth,
     calendarId: 'primary',
-    timeMin: start + "T00:00:00.000Z",
-    timeMax: end + "T00:00:00.000Z",
+    timeMin: start,
+    timeMax: end,
     singleEvents: true,
     orderBy: 'startTime'
   }, function(err, response) {
@@ -136,7 +136,7 @@ function listEvents(auth, callback) {
       return;
     }
     var eventsList = response.items;
-    
+    console.log('Calendar events successfully downloaded. Executing user callback');
     // The callback enabling user to execute whatever code desired.
     callback(eventsList);
   });

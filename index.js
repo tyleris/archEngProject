@@ -1,60 +1,65 @@
 //index.js
 //Main file for processing caledar events from the google API
+'use strict';
+
+// TODO:
+// Deal with all day events (allow settings. if yes, convert to event starting at 00:00 ending 24:00)
+// Timezones
+// Additional calendars as a setting
+// comparing two calendars
 
 const gCalAPI = require('./googleCalAPI.js');
+const dateCalcs = require('./dateCalcs.js');
+const fs = require('fs');
 
-startDate = '2017-10-18'; 
-endDate = '2017-10-28';
+// Set start and end date to determine what events to retrieve
+const startDate = new Date('2017-10-24'); 
+const endDate = new Date('2017-10-26');
+endDate.setDate(endDate.getDate() + 1);
 
-gCalAPI.getEvents(startDate, endDate, freeBusy);
+/* Note: User has three options for using Google Cal API callbacks. 
+* 1. Use gCalAPI.getEvents with a callback to do anything user pleases
+* 2. Use gCalAPI.getEvents(start, end, downloadEvents) to download json of events to a local file 
+* 3. Use localGetEvents(file, callback) to run callback function on a local json
+*/
 
-function freeBusy(events){
-    if (events == undefined) {return console.error('error events undefined')}
+////////// Option 1 ////////////
 
-    var busyTime;
-    if (events.length == 0) {
-        console.log('No upcoming events found.');
-      } else {
-        let cnt = 0;
-        for (var i = 0; i < events.length; i++) {
-            var event = events[i];
+// // get calendar events from google API and run callback immediately
+// gCalAPI.getEvents(startDate, endDate, function(events) = dateCalcs.findFreeTime(events, starDate, endDate));
 
-                // Loop through all busy start times. 
-                for (var j = 0; j < busyTime.length; j += 1) {
-                    var busy = busyTime[j];
+////////// Option 2 ////////////
 
-                    if (event.start.dateTime < busy.start) {
-                        var newStart = event.start.dateTime;
+// // Download events as json to be read directly using localGetEvents
+// gCalAPI.getEvents(startDate, endDate, downloadEvents);
 
-                        // Now start determining what to do based on end time
-                        for (var k = j; k < busyTime.length; k += 1 ) {
-                            var busyEnd = busyTime[k].end;  
-                            
-                            // if ends before start, insert new object
-                            if (event.end.dateTime < busy2.start) {
+// function downloadEvents(events) {
+//     fs.writeFile('./events.json', JSON.stringify(events), (err) => {
+//         if(err) {
+//             return console.log(err);
+//         }
+//         console.log('The google API events were saved in file "events.json"');
+//     }); 
+// }
 
-                            // If ends between start and end, delete and use new end
-                            } else if () {
+////////// Option 3 ////////////
 
-                            }
+localGetEvents('./events.json', function(events) { dateCalcs.findFreeTime(events, startDate, endDate) });
 
-                            // If ends after end, delete 
-                        }
-
-                        break; // no need to loop through more start times
-                    }
-                }
-                // For each busyTime event
-                // if  event.start < busyTime.start 
-                { start = event.end.dateTime , end = endDate + 'T00:00:00.000Z' }
-            
-            }
-
-            var eventEnd = event.end.dateTime || event.end.date;
-          console.log('%s - %s', eventStart, eventEnd, event.summary);
+function localGetEvents(eventFile, callback) {
+    // load file
+    fs.readFile('./events.json', (err, data) => {
+        if (err) {
+            console.log('could not read file "events.json"');
+        } else {
+            const events = JSON.parse(data);
+            console.log('successfully loaded file. Executing callback.');
+            callback(events);
         }
-      }
+    });
 }
+
+/////////////////////////
 
 function test(events){
     if (events == undefined) {return console.error('error events undefined')}
