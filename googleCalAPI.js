@@ -13,12 +13,12 @@ var SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
 var TOKEN_DIR = './credentials/';
 var TOKEN_PATH = TOKEN_DIR + 'calendar-nodejs-quickstart.json';
 
-let start; //format: "2017-10-17"
+let start;
 let end;
 
 //Main API call to get calendar events
 // Parameters: start days, end days
-module.exports.getEvents = function getEvents(startDate, endDate, callback){
+module.exports.getEvents = function getEvents(startDate, endDate, callback) {
   start = startDate;
   end = endDate;
   // Load client secrets from a local file.
@@ -50,7 +50,7 @@ function authorize(credentials, apiCallback, userCallback) {
   // Check if we have previously stored a token.
   fs.readFile(TOKEN_PATH, function(err, token) {
     if (err) {
-      getNewToken(oauth2Client, callback);
+      getNewToken(oauth2Client, userCallback);
       console.log('getting new token');
     } else {
       oauth2Client.credentials = JSON.parse(token);

@@ -30,34 +30,34 @@ endDate.setDate(endDate.getDate() + 1);
 
 ////////// Option 2 ////////////
 
-// // Download events as json to be read directly using localGetEvents
-// gCalAPI.getEvents(startDate, endDate, downloadEvents);
+// Download events as json to be read directly using localGetEvents
+gCalAPI.getEvents(startDate, endDate, downloadEvents);
 
-// function downloadEvents(events) {
-//     fs.writeFile('./events.json', JSON.stringify(events), (err) => {
-//         if(err) {
-//             return console.log(err);
-//         }
-//         console.log('The google API events were saved in file "events.json"');
-//     }); 
-// }
+function downloadEvents(events) {
+    fs.writeFile('./events.json', JSON.stringify(events), (err) => {
+        if(err) {
+            return console.log(err);
+        }
+        console.log('The google API events were saved in file "events.json"');
+    }); 
+}
 
 ////////// Option 3 ////////////
 
-localGetEvents('./events.json', function(events) { dateCalcs.findFreeTime(events, startDate, endDate) });
+// localGetEvents('./events.json', function(events) { dateCalcs.findFreeTime(events, startDate, endDate) });
 
-function localGetEvents(eventFile, callback) {
-    // load file
-    fs.readFile('./events.json', (err, data) => {
-        if (err) {
-            console.log('could not read file "events.json"');
-        } else {
-            const events = JSON.parse(data);
-            console.log('successfully loaded file. Executing callback.');
-            callback(events);
-        }
-    });
-}
+// function localGetEvents(eventFile, callback) {
+//     // load file
+//     fs.readFile('./events.json', (err, data) => {
+//         if (err) {
+//             console.log('could not read file "events.json"');
+//         } else {
+//             const events = JSON.parse(data);
+//             console.log('successfully loaded file. Executing callback.');
+//             callback(events);
+//         }
+//     });
+// }
 
 /////////////////////////
 
