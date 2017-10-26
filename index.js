@@ -28,8 +28,7 @@ app.get('/', (request, response) => {
 });
 
 app.get('/getCredentials', (request, response) => {     
-    text = gCalAPI.getGoogleAuth();
-    response.send(text);
+    gCalAPI.getGoogleAuth(function(text) {response.send(text);});    
 });
 
 app.get('/storeCredentials', (request, response) => {     

@@ -27,13 +27,16 @@ exports.getEvents = function getEvents(startDate, endDate, callback){
   });
 }
 
-exports.getGoogleAuth = function getGoogleAuth() {
-  authorizeServer(function(oauth2Client) {
+exports.getGoogleAuth = function getGoogleAuth(callback) {
+  console.log('running getGoogleAuth');
+  return authorizeServer(function(oauth2Client) {
+    console.log('authorizing server');
     var authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: SCOPES
     });
-    return 'Authorize this app by visiting this url and copying the code from that page below: ' + authUrl;
+    const text = 'Authorize this app by visiting this url and copying the code from that page below: ' + authUrl;
+    callback(text);
   });  
 }
   
@@ -81,7 +84,7 @@ function authorizeServer(callback) {
     var redirectUrl = credentials.installed.redirect_uris[0];
     var auth = new googleAuth();
     var oauth2Client = new auth.OAuth2(clientId, clientSecret, redirectUrl);
-
+    console.log('oauth2Client created:' + oauth2Client);
     callback(oauth2Client);
   });
 }
