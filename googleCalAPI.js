@@ -27,30 +27,53 @@ exports.getEvents = function getEvents(startDate, endDate, callback){
   });
 }
 
-exports.getGoogleAuth = function getGoogleAuth(callback) {
+exports.getGoogleAuthLink = function getGoogleAuth(callback) {
   console.log('running getGoogleAuth');
-  return authorizeServer(function(oauth2Client) {
+  authorizeServer(function(oauth2Client) {
     console.log('authorizing server');
     var authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: SCOPES
     });
-    const text = 'Authorize this app by visiting this url and copying the code from that page below: ' + authUrl;
-    callback(text);
+    const link = authUrl;
+    callback(link);
   });  
 }
   
-  exports.getNewToken = function getNewToken(oauth2Client, code) {
+/**
+ * Download token from Google based on user access code
+ * @param {Object} code The access code used to retrieve a user token from Google.
+ */
+exports.downloadToken = function downloadToken(code, callback) {
+  authorizeServer(function(oauth2Client) {
     oauth2Client.getToken(code, function(err, token) {
       if (err) {
         console.log('Error while trying to retrieve access token', err);
         return;
       }
-      oauth2Client.credentials = token;
-      storeToken(token);
+      // oauth2Client.credentials = token;
+      storeToken(token)
+      callback();
     });
+  });
+}
+
+/**
+ * Store token to disk be used in later program executions.
+ * @param {Object} token The token to store to disk.
+ */
+function storeToken(token) {
+  try {
+    fs.mkdirSync(TOKEN_DIR);
+  } catch (err) {
+    if (err.code != 'EEXIST') {
+      throw err;
+    }
   }
-  
+  fs.writeFile(TOKEN_PATH, JSON.stringify(token));
+  console.log('Token stored to ' + TOKEN_PATH);
+}
+
 // function authorizeServer(apiCallback, userCallback) {
 //   fs.readFile('client_secret.json', function processClientSecrets(err, content) {
 //     if (err) {
@@ -168,22 +191,7 @@ function authorizeUser(oauth2Client, callback) {
 // }
 
 
-/**
- * Store token to disk be used in later program executions.
- *
- * @param {Object} token The token to store to disk.
- */
-function storeToken(token) {
-  try {
-    fs.mkdirSync(TOKEN_DIR);
-  } catch (err) {
-    if (err.code != 'EEXIST') {
-      throw err;
-    }
-  }
-  fs.writeFile(TOKEN_PATH, JSON.stringify(token));
-  console.log('Token stored to ' + TOKEN_PATH);
-}
+
 
 ////////////
 //////////// Actual API call

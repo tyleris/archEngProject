@@ -14,6 +14,8 @@ const fs = require('fs');
 const express = require('express');
 const app = express();
 const http = require('http');
+const bodyParser = require('body-parser');
+const path = require('path');
 
 const port = 8080;
 
@@ -22,36 +24,63 @@ const startDate = new Date('2017-10-24');
 const endDate = new Date('2017-10-26');
 endDate.setDate(endDate.getDate() + 1);
 
+/////////////////////////////
+//////// Middleware ////////////
+/////////////////////////////
+
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
+/////////////////////////////
+//////// Routers ////////////
+/////////////////////////////
 
 app.get('/', (request, response) => {     
     response.send('working \n');
 });
 
-app.get('/getCredentials', (request, response) => {     
-    gCalAPI.getGoogleAuth(function(text) {response.send(text);});    
+app.get('/test/:text', (request, response) => {     
+    const text = request.params.text;
+    response.send('roger that: ' + text + '\n');
 });
 
-app.get('/storeCredentials', (request, response) => {     
-    
-        response.send('you are logged in');
-    });
-
-app.get('/login/:id', (request, response) => { 
-    const id = request.params.id;
-    
-
-
-    response.send('you are logged in');
+app.get('/getGoogleLink', (request, response) => {     
+    gCalAPI.getGoogleAuthLink(function(link) {
+        response.send(link);
+    });    
 });
+
+// app.get('/downloadToken:code', (request, response) => {     
+//     const code = request.params.code;
+//     gCalAPI.downloadToken(code, function() { response.send('your user ID token has been stored. \n'); } );
+// });
+
+app.get('/signup', (request, response) => { 
+    // Can I pass a variable here?
+    response.sendFile(path.join(__dirname + '/signup2.html'));    
+});
+
+app.post('/signup/submit', (request, response) => {
+    var userid = request.body.userid;
+    var pass = request.body.pass;
+    console.log('username and pass:' + userid + ' ' + pass);
+    response.end('yes');
+});
+
+// app.get('/login/:id:pass', (request, response) => { 
+//     const id = request.params.id;
+//     const pass = request.params.pass;
+//     response.send('you are logged in \n');
+// });
 
 app.get('/myFreeTime', (request, response) => { 
-    
-    response.send('your free time is:...');
+    gCalAPI.getEvents(startDate, endDate, function(eventsList) {
+        const freeTime = dateCalcs.findFreeTime(eventsList, startDate, endDate);
+        response.send('free time is: ' + freeTime);
+    });
 });
 
-console.log('listening on port:' + port);
-app.listen(port);
-
+app.listen(port, () => console.log('listening on port:' + port));
 /* Note: User has three options for using Google Cal API callbacks. 
 * 1. Use gCalAPI.getEvents with a callback to do anything user pleases
 * 2. Use gCalAPI.getEvents(start, end, downloadEvents) to download json of events to a local file 
