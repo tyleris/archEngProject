@@ -3,6 +3,9 @@ var readline = require('readline');
 var google = require('googleapis');
 var googleAuth = require('google-auth-library');
 const express = require('express');
+const firebase = require('firebase');
+
+
 
 //TODO: get all calendars and let user select which call 
 //TODO: enable passing of which user to select. By passing credential location
