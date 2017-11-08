@@ -13,8 +13,8 @@ const dateCalcs = require('./dateCalcs.js');
 const fs = require('fs');
 
 // Set start and end date to determine what events to retrieve
-const startDate = new Date('2017-10-24'); 
-const endDate = new Date('2017-10-26');
+const startDate = new Date('2017-11-1'); 
+const endDate = new Date('2017-11-26');
 endDate.setDate(endDate.getDate() + 1);
 
 /* Note: User has three options for using Google Cal API callbacks. 
@@ -30,34 +30,34 @@ endDate.setDate(endDate.getDate() + 1);
 
 ////////// Option 2 ////////////
 
-// Download events as json to be read directly using localGetEvents
-gCalAPI.getEvents(startDate, endDate, downloadEvents);
+// // Download events as json to be read directly using localGetEvents
+// gCalAPI.getEvents(startDate, endDate, downloadEvents);
 
-function downloadEvents(events) {
-    fs.writeFile('./events.json', JSON.stringify(events), (err) => {
-        if(err) {
-            return console.log(err);
-        }
-        console.log('The google API events were saved in file "events.json"');
-    }); 
-}
+// function downloadEvents(events) {
+//     fs.writeFile('./calendarData/events.json', JSON.stringify(events), (err) => {
+//         if(err) {
+//             return console.log(err);
+//         }
+//         console.log('The google API events were saved in file "./calendarData/events.json"');
+//     }); 
+// }
 
 ////////// Option 3 ////////////
 
-// localGetEvents('./events.json', function(events) { dateCalcs.findFreeTime(events, startDate, endDate) });
+localGetEvents('./calendarData/events.json', function(events) { dateCalcs.findFreeTime(events, startDate, endDate) });
 
-// function localGetEvents(eventFile, callback) {
-//     // load file
-//     fs.readFile('./events.json', (err, data) => {
-//         if (err) {
-//             console.log('could not read file "events.json"');
-//         } else {
-//             const events = JSON.parse(data);
-//             console.log('successfully loaded file. Executing callback.');
-//             callback(events);
-//         }
-//     });
-// }
+function localGetEvents(eventFile, callback) {
+    // load file
+    fs.readFile(eventFile, (err, data) => {
+        if (err) {
+            console.log('could not read file "events.json"');
+        } else {
+            const events = JSON.parse(data);
+            console.log('successfully loaded file. Executing callback.');
+            callback(events);
+        }
+    });
+}
 
 /////////////////////////
 

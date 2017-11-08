@@ -7,11 +7,11 @@ var googleAuth = require('google-auth-library');
 //TODO: enable passing of which user to select. By passing credential location
 
 // If modifying these scopes, delete your previously saved credentials
-// at ~/.credentials/calendar-nodejs-quickstart.json
+// at ~/.credentials/testCredentials.json
 var SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
 //var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE) + '/.credentials/';
 var TOKEN_DIR = './credentials/';
-var TOKEN_PATH = TOKEN_DIR + 'calendar-nodejs-quickstart.json';
+var TOKEN_PATH = TOKEN_DIR + 'testCredentials.json';
 
 let start;
 let end;
@@ -19,8 +19,8 @@ let end;
 //Main API call to get calendar events
 // Parameters: start days, end days
 module.exports.getEvents = function getEvents(startDate, endDate, callback) {
-  start = startDate;
-  end = endDate;
+  start = startDate.toISOString();
+  end = endDate.toISOString();
   // Load client secrets from a local file.
   fs.readFile('client_secret.json', function processClientSecrets(err, content) {
     if (err) {
@@ -50,8 +50,8 @@ function authorize(credentials, apiCallback, userCallback) {
   // Check if we have previously stored a token.
   fs.readFile(TOKEN_PATH, function(err, token) {
     if (err) {
-      getNewToken(oauth2Client, userCallback);
       console.log('getting new token');
+      getNewToken(oauth2Client, userCallback);
     } else {
       oauth2Client.credentials = JSON.parse(token);
       console.log('accessing token from path :' + TOKEN_PATH);
@@ -89,7 +89,7 @@ function getNewToken(oauth2Client, callback) {
       }
       oauth2Client.credentials = token;
       storeToken(token);
-      callback(oauth2Client);
+      console.log('Run again now that access token is stored');
     });
   });
 }
@@ -122,7 +122,8 @@ function storeToken(token) {
  */
 function listEvents(auth, callback) {
   var calendar = google.calendar('v3');
-  console.log('Getting calendar events from dates: ' + JSON.stringify(start) + ' to: ' + JSON.stringify(end));
+  console.log('auth check: ' + JSON.stringify(auth));
+  console.log('Getting calendar events from dates: ' + start + ' to: ' + end);
   calendar.events.list({
     auth: auth,
     calendarId: 'primary',
