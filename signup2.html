@@ -16,11 +16,50 @@
     };
     firebase.initializeApp(config);
     </script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.firebase.com/libs/firebaseui/2.4.1/firebaseui.js"></script>
     <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/2.4.1/firebaseui.css" />
     <script type="text/javascript">
       // FirebaseUI config.
+
+      
+      function initFirebase() {
+        var database = firebase.database();
+        console.log('initialized db');
+      }
+      
+      function firePostMessage() {
+        var userId = 'test';
+        firebase.database().ref('users/' + userId).set({
+          userId: userId,
+          pass: 'cat' 
+        });
+        console.log('fired post message');
+      }
+      
       var uiConfig = {
+        callbacks: {
+          signInSuccess: function(currentUser, credential, redirectUrl) {
+            
+            console.log('hasnt failed yet');
+
+            initFirebase();
+            firePostMessage();
+
+            // $.get("localhost:8080/test/doesthiswork");
+            alert('is it working?');
+
+            // $.post("localhost:8080:/signup/submit", {user: 'test', pass: 'cats'}, function(data, status){
+            //   alert("Data: " + data + "\nStatus: " + status);
+            // });
+    
+
+            // Do something.
+            // Return type determines whether we continue the redirect automatically
+            // or whether we leave that to developer to handle.
+            return true;
+          }
+        },
         signInSuccessUrl: 'welcome.html',
         signInOptions: [
             {
@@ -28,7 +67,7 @@
                 scopes: [
                     'https://www.googleapis.com/auth/calendar.readonly',
                 ],
-            }
+            },
           // Leave the lines as is for the providers you want to offer your users. 
           
         //   firebase.auth.FacebookAuthProvider.PROVIDER_ID,
@@ -50,6 +89,9 @@
   <body>
     <!-- The su rrounding HTML is left untouched by FirebaseUI.
          Your app may use that space for branding, controls and other customizations.-->
+    <!-- <form action='/signup/submit' method = 'post' name='sub' onsubmit=''>
+      <input type='submit' name='submit' value="save cal token for Alexa to use in future">
+    </form> -->
     <h1>Sign in and lets make scheduling simple</h1>
     <div id="firebaseui-auth-container"></div>
   </body>

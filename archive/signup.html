@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<script>
+    const gCalAPI = require('./googleCalAPI.js');
+    const getLink = function() {
+        // top.location.href = 'http://google.com';
+        // TODO - need to send this as a get request to redirect?
+        
+        const link = 'http://google.com';
+        window.open(link, '_blank');
+        // gCalAPI.getGoogleAuthLink(function (link) {
+        //     // send to link provided in 'link'
+        //     window.open(link, '_blank');
+        // });
+    }
+</script>
+<body>
+    <div>
+        <p>Click 'Get Google Code' to get authorization code from Google.</p>
+        <button onclick="getLink()"> Get Google Code </button>            
+    </div>
+
+    <p>
+        Instructions create username and password. Then click 'Create Login'. 
+        You will be redirected to a google authentication page. 
+        Copy password from that page into the textbox below and press submit. 
+    </p>
+
+    <form action='/signup/submit' method='post'>
+        Paste Google Authroization Code here:
+        <label for='googleCode'>Google Code</textarea>
+            <input type='text' id='googleCode'></br>
+        <label for="userid">User Id:</label>
+            <input type='text' id='userid'></br>
+        <label for="pass">Password:</label>
+            <input type='text' id='pass'></br>
+        <input type='submit' name='singupsubmit' value='Submit' />
+    </form>
+</body>
+</html>

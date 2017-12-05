@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>CoffeeSandwhichCocktail</title>
+    <meta charset='utf-8' />
+  </head>
+  <body>
+    <p>CoffeeSandwhichCocktail</p>
+
+    <!--Add buttons to initiate auth sequence and sign out-->
+    <button id="authorize-button">Get authorization code</button>
+    <input type="text" id="username" placeholder="create user name"></input>
+    <input type="text" id="secret" placeholder="secrete code from google"></input>
+    <button id="submit" style="display: none" onclick="handleSignup()">Signup</button>
+
+    <!-- <button id="authorize-button" >Authorize</button>
+    <button id="signout-button" >Sign Out</button> -->
+
+
+    <!-- load JQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    
+    <script type="text/javascript">
+    
+        var authorizeButton = document.getElementById('authorize-button');
+        var usernameInput = document.getElementById('username'); 
+        var secretInput = document.getElementById('secret');
+        var submitButton = document.getElementById('submit');
+        
+        function getGoogleLink(){
+            
+        }
+        
+        // Send username and client secret to server 
+        function submit(){
+            var user = usernameInput.value;
+            var secret = secretInput.value;
+            $.post('/..', { user: user, secret: secret });
+        }
+        
+    
+    
+    </script>
