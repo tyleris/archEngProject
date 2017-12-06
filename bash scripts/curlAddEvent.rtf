@@ -16,7 +16,7 @@ curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler","l
 Test cases:\
 \
 2 users\
-curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler","lwin"],"eventStart":"2017-12-05T09:00:00","eventEnd":"2017-12-05T10:00:00","summary":"lunch time!"\}' http://localhost:8080/addEvent\
+curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler","lwin"],"eventStart":"2017-12-09T09:00:00","eventEnd":"2017-12-09T10:00:00","summary":"test event!"\}' http://localhost:8080/addEvent\
 \
 1 user string\
 curl --header "Content-Type:application/json" -X POST -d  '\{"users":"lwin","eventStart":"2017-12-05T09:00:00","eventEnd":"2017-12-05T10:00:00","summary":"lunch time!"\}' http://localhost:8080/addEvent\

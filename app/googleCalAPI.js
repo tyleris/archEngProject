@@ -1,9 +1,8 @@
 var fs = require('fs');
 var readline = require('readline');
 var google = require('googleapis');
+var calendar = google.calendar('v3')
 var googleAuth = require('google-auth-library');
-const express = require('express');
-const firebase = require('firebase');
 
 //TODO: get all calendars and let user select which call 
 //TODO: enable passing of which user to select. By passing credential location
@@ -12,8 +11,8 @@ const firebase = require('firebase');
 // at ~/.credentials/calendar-nodejs-quickstart.json
 var SCOPES = ['https://www.googleapis.com/auth/calendar'];
 //var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE) + '/.credentials/';
-var TOKEN_DIR = './credentials/';
-var TOKEN_PATH = TOKEN_DIR + 'userToken.json';
+var USER_TOKEN_DIR = './credentials/users/';
+var SERVER_TOKEN_DIR = './credentials/server/'
 
 let start; //format: "2017-10-17"
 let end;
@@ -43,20 +42,24 @@ exports.getGoogleAuthLink = function getGoogleAuth(callback) {
  * Download token from Google based on user access code
  * @param {Object} code The access code used to retrieve a user token from Google.
  */
-exports.downloadToken = function downloadToken(secretCode, callback) {
+exports.downloadToken = function downloadToken(user, secretCode, callback) {
   authorizeServer(function(oauth2Client) {
     oauth2Client.getToken(secretCode, function(err, token) {
       if (err) {
         console.log('Error while trying to retrieve access token', err);
         return;
       }
-      callback();
+      fs.writeFile(USER_TOKEN_DIR + user + '_credentials.json', JSON.stringify(token), (err) => {
+        callback(err);
+      });
     });
   });
 }
 
 function authorizeServer(callback) {
-  fs.readFile('client_secret.json', function processClientSecrets(err, content) {
+  console.log('authorizing sever');
+
+  fs.readFile(SERVER_TOKEN_DIR + 'client_secret.json', function processClientSecrets(err, content) {
     if (err) {
       console.log('Error loading client secret file: ' + err);
       return;
@@ -69,24 +72,27 @@ function authorizeServer(callback) {
     var redirectUrl = credentials.installed.redirect_uris[0];
     var auth = new googleAuth();
     var oauth2Client = new auth.OAuth2(clientId, clientSecret, redirectUrl);
-    console.log('oauth2Client created:' + oauth2Client);
+    console.log('Server created oauth2Client');
+    console.log(JSON.stringify(oauth2Client)); //TEMP
     callback(oauth2Client);
   });
 }
 
-function authorizeUser(oauth2Client, callback) {
+function authorizeUser(user, oauth2Client, callback) {
+  console.log('authorizing user: ' + user);
   // TODO: this should become user login.
 
   // Check if we have previously stored a token.
-  fs.readFile(TOKEN_PATH, function(err, token) {
+  fs.readFile(USER_TOKEN_DIR + user + '_credentials.json', function(err, token) {
     if (err) {
-      console.log('No token found. please go to get new token path.');
+      console.log('No user credentials found at: ' + USER_TOKEN_DIR + user + '_credentials.json' + '. please go to get new token path.');
       // getNewToken(oauth2Client, apiCallback);
     
     } else {
+      console.log('User credentials found. Accessed token from path :' + USER_TOKEN_DIR + user + 'credentials.json');
       oauth2Client.credentials = JSON.parse(token);
-      console.log('Token found. Accessing token from path :' + TOKEN_PATH);
-      
+      console.log(JSON.stringify(oauth2Client.credentials));
+
       // call the passed function with the authorization
       callback(oauth2Client);
     }
@@ -99,10 +105,11 @@ function authorizeUser(oauth2Client, callback) {
 
 //Main API call to get calendar events
 // Parameters: start days, end days
-exports.getEvents = function getEvents(startDate, endDate, callback){
-  authorizeServer(function(oauth2Client) { 
-    authorizeUser(oauth2Client, function (userToken) {
-      listEvents(userToken, callback)
+exports.getEvents = function getEvents(user, startDate, endDate, callback){
+  console.log('getting events for: '+ user + ' from: ' + startDate + ' to ' + endDate);
+  authorizeServer((oauth2Client) => { 
+    authorizeUser(user, oauth2Client, (auth) => {
+      listEvents(auth, startDate, endDate, callback)
     });
   });
 }
@@ -112,14 +119,15 @@ exports.getEvents = function getEvents(startDate, endDate, callback){
  *
  * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
  */
-function listEvents(auth, callback) {
+function listEvents(auth, startDate, endDate, callback) {
+  console.log(JSON.stringify(auth));
   var calendar = google.calendar('v3');
-  console.log('Getting calendar events from dates: ' + JSON.stringify(start) + ' to: ' + JSON.stringify(end));
+  console.log('Getting calendar events from dates: ' + JSON.stringify(startDate) + ' to: ' + JSON.stringify(endDate));
   calendar.events.list({
     auth: auth,
     calendarId: 'primary',
-    timeMin: start,
-    timeMax: end,
+    timeMin: startDate.toISOString(),
+    timeMax: endDate.toISOString(),
     timeZone: 'America/New_York',
     singleEvents: true,
     orderBy: 'startTime'
@@ -166,18 +174,19 @@ function listEvents(auth, callback) {
   //     ],
   //   },
   // };
-  exports.addEvent = function addEvent(event, callback){
-    authorizeServer(function(oauth2Client) { 
-      authorizeUser(oauth2Client, function (userToken) {
-        addEventToGCal(userToken, event, function(event){
+  exports.addEvent = function addEvent(user, event, callback){
+    authorizeServer((oauth2Client) => { 
+      authorizeUser(user, oauth2Client, (userToken) => {
+        addEventToGCal(userToken, event, (err) => {
           // do something with event
-          callback(event); 
+          callback(err); 
         });
       });
     });
   }
 
 function addEventToGCal(auth, event, callback) {
+  console.log('adding event: ' + JSON.stringify(event));
   calendar.events.insert({
     auth: auth,
     calendarId: 'primary',

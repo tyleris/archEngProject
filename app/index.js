@@ -1,3 +1,4 @@
+
 //index.js
 //Main file for processing caledar events from the google API
 'use strict';
@@ -81,35 +82,32 @@ app.get('/userLink', (request, response) => {
     console.log('getting google authorization link');
     gCalAPI.getGoogleAuthLink((link) => {
         response.send(link);
-    })
+    });
 });
 
 // request { user: , secret: }
 app.post('/saveToken', (request, response) => {
     console.log('saving token');
-    var user = request.body.user;
+    var user = request.body.user.toLowerCase();
     var secretCode = request.body.secret;
-    gCalAPI.downloadToken(secretCode,(token) => {
-        fs.writeFile(CREDDIR + user + '_credentials.json', token,(err) => {
-            if (err) {
-                console.log('failed to save token: ' + err);
-                response.send('failed to save token: ' + err);
-            } else {
-                console.log('successfully saved token');
-                response.send('successfully saved token');
-            }
-        });
-        
-    })
-})
+    gCalAPI.downloadToken(user, secretCode, (err) => {
+        if (err) {
+            console.log('failed to save token: ' + err);
+            response.send('failed to save token: ' + err);
+        } else {
+            console.log('successfully saved token');
+            response.send('successfully saved token');
+        }    
+    });
+});
 
 /////////////////////////
-//// get events ////
+//// add events ////
 ///////////////////////
 
-app.get('/displayEvents', (request,response) => {
-    response.sendFile(path.join(__dirname + '/eventsDisplay.html'));
-});
+// app.get('/displayEvents', (request,response) => {
+//     response.sendFile(path.join(__dirname + '/eventsDisplay.html'));
+// });
 
 // app.get('/findFreeTime/:user', (request, response) => {
 //     var user = request.params.user;
@@ -131,19 +129,15 @@ app.post('/addEvent', (request, response) => {
     var users;
     if (typeof data.users == 'string'){
         users = [data.users.toLowerCase()];
-        
     } else {
         users = data.users.map((item) => item.toLowerCase());
     }
 
     var eventStart = new Date(data.eventStart);
-    eventStart = new Date(eventStart.getTime());
-    //var duration = data.duration * 60 || '60';
     var eventEnd = new Date(data.eventEnd);
-    eventEnd = new Date(eventEnd.getTime());
 
     var summary = data.summary || 'Meeting with ' + users.join(', ');
-    var recur = data.recur == undefined ? '' : "RRULE:FREQ=WEEKLY;COUNT=15;BYDAY=" + data.recur.join(); 
+    var recur = data.recur == undefined ? '' : ["RRULE:FREQ=WEEKLY;COUNT=15;BYDAY=" + data.recur.join()]; 
     //find end time
     
     console.log('creating event with: \nusers: ' + users + '\nstart: ' + eventStart + '\nend: ' + eventEnd + '\nsummary: ' + summary + '\nrecur: ' + recur);
@@ -161,7 +155,7 @@ app.post('/addEvent', (request, response) => {
             dateTime: eventEnd.toISOString(),
             timeZone: 'America/New_York',
         },
-        recurrence: [recur],
+        recurrence: recur,
         // attendees: [
         // {email: 'lpage@example.com'},
         // {email: 'sbrin@example.com'},
@@ -173,6 +167,7 @@ app.post('/addEvent', (request, response) => {
             //     {method: 'popup', 'minutes': 10},
             // ],
     }
+    console.log('event created: ' + JSON.stringify(event));
 
     // Send response to Alexa
     var userReadout = '';
@@ -182,27 +177,27 @@ app.post('/addEvent', (request, response) => {
             userReadout = userReadout + 'and '
         }
     }
-
-    // // Add event
-    // console.log('sending event to google api to add')
-    // gCalAPI.addEvent(event, (err, evt) => {
-    //     if (err) {
-    //         response.send({ outcome: 'failure', data: err })
-    //     } else {
-    //         var start = new Date(evt.start.dateTime);
-    //         var readout = readoutDOWTime(start);
-        
-    //         response.send({ outcome: 'success', readout: 'event with ' + userReadout + 'successfully created on ' + readoutTime })
-    //     }
-    // }); 
-
-    // TODO: remove this once google api working!
-    var readout = 'event with ' + userReadout + 'successfully created on ' + readoutDOWTime(eventStart); 
-    // 'on ' + readoutDOWTime(eventStart); 
     
-    var outcome = { outcome: 'success', readout: readout }
-    console.log('reading out: ' + JSON.stringify(outcome));
-    response.send(outcome);
+    // Add event
+    console.log('sending event to google api to add');
+    var cnt = 0;
+    for (i = 0; i < users.length; i++){
+        gCalAPI.addEvent(users[i], event, (err) => {
+            if (err) {
+                console.log('add event failed: ' + err);
+                response.send({ outcome: 'failure', data: err })
+            } else {
+                cnt = cnt + 1;
+
+                if (cnt == users.length) {
+                    var readout = 'event with ' + userReadout + 'successfully created on ' + readoutDOWTime(eventStart);
+                    var outcome = { outcome: 'success', readout: readout }
+                    console.log('reading out: ' + JSON.stringify(outcome));
+                    response.send(outcome);
+                }
+            }
+        }); 
+    }
 });
 
 function readoutDOWTime(date){
@@ -235,17 +230,19 @@ function readoutDOWTime(date){
 //     return hOut + minTens + onesOut + suffix 
 // }
 
+/////////////////////
+///////////// find free time
+////////////////////
+
 // Request: {users: [user1, user2, etc...], window: <breakfast, morning, lunch, afternoon, dinner, evening, day, wake>, length: {<1, 2, 3>} dateRange: { start: dateTime, end: dateTime }, dateStart: <date> }
 // dateTime format 2017-11-30T09:00:00
 // Response: { freeTimes: [{ start: dateTime, end: dateTime }], readout: 'You have free time at 3, 6, 7 and 8' }
 app.post('/findFreeTime', (request, response) => {
-    console.log('starting')
     var data = request.body;
-    console.log('finding free time. Request data: ' + data);
+    console.log('finding free time. Request data: ' + JSON.stringify(data));
 
     // create a time window based on the words passed
     var window = getTimeWindow(data.window);
-
     var startDate;
     var endDate;
     // determine the date range
@@ -260,10 +257,14 @@ app.post('/findFreeTime', (request, response) => {
         startDate = new Date(dateRange.start)
         endDate = new Date(dateRange.end)
     } else if (data.dateRange != undefined && data.dateStart != undefined) {
-
+        //TODO
     } else if (data.dateRange == undefined && data.dateStart == undefined) {
-
+        //TODO
     }
+
+    // set the length of the new event to be added 
+    var length = data.length == undefined ? 60 : data.length * 60;
+                    
      
     // var dateRange = data.dateRange == undefined ? makeDateRangeThisWeek() : data.dateRange;
     // var dateStart = data.dateStart == undefined ? 
@@ -276,34 +277,41 @@ app.post('/findFreeTime', (request, response) => {
     var users = data.users.map((item) => item.toLowerCase());
 
     console.log('users: ' + JSON.stringify(users));
-    var  events = [];
+    var eventsAll = [];
+    var count = 0;
     for (var i = 0; i < users.length; i++) {
-        var pathstring = EVENTSDIR + users[i] + '_events.json';
-        var content = fs.readFileSync(pathstring, 'utf8')
-        content = JSON.parse(content);
-        events = events.concat(content);
+        // var pathstring = EVENTSDIR + users[i] + '_events.json';
+        // var content = fs.readFileSync(pathstring, 'utf8')
+        // content = JSON.parse(content);
+        // events = events.concat(content);
+        
+        gCalAPI.getEvents(users[i], startDate, endDate, (events) => {
+            //console.log('events: ' + JSON.stringify(events));
+
+            eventsAll.concat(events);
+            console.log('events so far: ' + JSON.stringify(events));
+            console.log('count so far: ' + count);
+
+            // wait till all loops finished
+            if (count == users.length - 1) {
+    
+                // find the free time
+                console.log('finding free time...');
+                var freeTime = dateCalcs.findFreeTime(events, window, length, startDate, endDate);
+
+                // convert the time into english words
+                var readout = readoutFreeTime(freeTime);
+                
+                console.log('readout:' + readout);
+
+                var resData = { freeTimes: freeTime, readout: readout };
+ 
+                // send response
+                response.send(resData);
+            }
+            count = count + 1; 
+        })
     }
-
-    // set the length of the new event to be added 
-    var length = data.length == undefined ? 60 : data.length * 60;
-
-    // find the free time
-    console.log('finding free time...');
-    var freeTime = dateCalcs.findFreeTime(events, window, length, startDate, endDate);
-
-    // convert the time into english words
-    var readout = readoutFreeTime(freeTime);
-    
-    console.log('readout:' + readout);
-
-    var resData = { freeTimes: freeTime, readout: readout };
-
-    // test data 
-    //var testData = { freeTimes: [{ start: '2017-11-30T15:00:00', end: '2017-11-30T16:00:00' }, {start: '2017-12-01T09:00:00' , end: '2017-12-01T09:00:00' }, {start: '2017-12-01T18:00:00' , end: '2017-12-01T18:30:00' }] , readout: 'you have overlapping free time on Thursday from 3pm to 4pm and on Friday from 9am to 11am and 6pm to 7pm' };
-    // response.send(testData);
-    
-    // send response
-    response.send(resData);
 });
 
 function readoutFreeTime(freeTime) {
