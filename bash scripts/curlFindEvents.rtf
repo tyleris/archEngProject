@@ -10,6 +10,13 @@
 \
 curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler","lwin"],"window":"morning","dateStart":"2017-12-06T12:30:00"\}' http://latchapartments.com:8080/findFreeTime\
 \
+one day - monday\
+curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler","lwin"],"window":"morning","dateStart":"2017-12-11T12:30:00"\}' http://latchapartments.com:8080/findFreeTime\
+\
+one day - wednesday\
+curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler","lwin"],"window":"morning","dateStart":"2017-12-11T12:30:00"\}' http://latchapartments.com:8080/findFreeTime\
+\
+\
 \
 test\
 curl http://localhost:8080/\
@@ -19,6 +26,13 @@ curl http://localhost:8080/\
 one day\
 \
 curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler","lwin"],"window":"morning","dateStart":"2017-12-06T12:30:00"\}' http://localhost:8080/findFreeTime\
+\
+curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler","lwin"],"window":"morning","dateStart":"2017-12-11T12:30:00"\}' http://localhost:8080/findFreeTime\
+\
+wednesday\
+curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler","lwin"],"window":"morning","dateStart":"2017-12-06T12:30:00"\}' http://localhost:8080/findFreeTime\
+\
+\
 \
 default 7 days\
 \

@@ -3,6 +3,8 @@
 // compares and calculates dates and lists of events 
 'use strict';
 
+var timezoneOffset = 0;
+
 // window.start 
 // returns: { [start: <dateTime>, end: <dateTime>, ... ] }
 module.exports.findFreeTime = function(events, window, length, startDate, endDate) {
@@ -97,10 +99,10 @@ function createWindowEvents(startDate, endDate, window) {
         var daystart = new Date(dF.valueOf());
 
         var windowstart = new Date(daystart.valueOf());
-        windowstart.setHours(parseInt(window.start.hour), window.start.min);
+        windowstart.setHours(parseInt(window.start.hour) + timezoneOffset, window.start.min);
 
         var windowend = new Date(daystart.valueOf());        
-        windowend.setHours(parseInt(window.end.hour), window.end.min);
+        windowend.setHours(parseInt(window.end.hour) + timezoneOffset, window.end.min);
         
         dF.setDate(dF.getDate() + 1); //increment dF
         

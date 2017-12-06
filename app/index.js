@@ -105,20 +105,6 @@ app.post('/saveToken', (request, response) => {
 //// add events ////
 ///////////////////////
 
-// app.get('/displayEvents', (request,response) => {
-//     response.sendFile(path.join(__dirname + '/eventsDisplay.html'));
-// });
-
-// app.get('/findFreeTime/:user', (request, response) => {
-//     var user = request.params.user;
-//     fs.readFile(EVENTSDIR + user + '_events.json', (err, data) => {
-//         var events =  JSON.parse(data);
-//         console.log(events);
-//         var freeTime = dateCalcs.findFreeTime(events, startDate, endDate);
-//         response.send(freeTime);
-//     });
-// });
-
 // Request: { users: [user1, user2, etc...], eventStart: <'yyyy-mm-ddThh:mm:ss'>, eventEnd: <'yyyy-mm-ddThh:mm:ss'>, summary:<optional: string>, recur: <[MO,TU,WE,TH,FR]>} 
 // Response: { outcome: <string: success or failure>, readout: <string response> }
 app.post('/addEvent', (request, response) => {
@@ -134,7 +120,9 @@ app.post('/addEvent', (request, response) => {
     }
 
     var eventStart = new Date(data.eventStart);
+    eventStart = new Date(eventStart.getTime() + 5 * 60 * 60 * 1000)
     var eventEnd = new Date(data.eventEnd);
+    eventEnd = new Date(eventEnd.getTime() + 5 * 60 * 60 * 1000)
 
     var summary = data.summary || 'Meeting with ' + users.join(', ');
     var recur = data.recur == undefined ? '' : ["RRULE:FREQ=WEEKLY;COUNT=15;BYDAY=" + data.recur.join()]; 
@@ -190,10 +178,17 @@ app.post('/addEvent', (request, response) => {
                 cnt = cnt + 1;
 
                 if (cnt == users.length) {
-                    var readout = 'event with ' + userReadout + 'successfully created on ' + readoutDOWTime(eventStart);
-                    var outcome = { outcome: 'success', readout: readout }
-                    console.log('reading out: ' + JSON.stringify(outcome));
-                    response.send(outcome);
+                    if (users.length = 1){
+                        var readout = summary + ' has been added to your calendar on ' + readoutDOWTime(new Date(eventStart.getTime() - 5 * 60 * 60 * 1000));
+                        var outcome = { outcome: 'success', readout: readout }
+                        console.log('reading out: ' + JSON.stringify(outcome));
+                        response.send(outcome);
+                    } else {
+                        var readout = 'event with ' + userReadout + 'successfully created on ' + readoutDOWTime(new Date(eventStart.getTime() - 5 * 60 * 60 * 1000));
+                        var outcome = { outcome: 'success', readout: readout }
+                        console.log('reading out: ' + JSON.stringify(outcome));
+                        response.send(outcome);
+                    }
                 }
             }
         }); 
@@ -237,21 +232,17 @@ app.post('/findFreeTime', (request, response) => {
         startDate = new Date(dateRange.start)
         endDate = new Date(dateRange.end)
     } else if (data.dateRange != undefined && data.dateStart != undefined) {
-        //TODO
+        startDate = new Date(dateRange.start)
+        endDate = new Date(dateRange.end)
     } else if (data.dateRange == undefined && data.dateStart == undefined) {
-        //TODO
+        startDate = new Date();
+        startDate.setHours(0,0,0,0);
+        endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + 7);
     }
 
     // set the length of the new event to be added 
     var length = data.length == undefined ? 60 : data.length * 60;
-                    
-     
-    // var dateRange = data.dateRange == undefined ? makeDateRangeThisWeek() : data.dateRange;
-    // var dateStart = data.dateStart == undefined ? 
-    // console.log('date range: ' + JSON.stringify(dateRange));
-    // var startDate = new Date(dateRange.start);
-    // var endDate = new Date(dateRange.end);
-    //console.log(startDate + ':' + endDate);
 
     // get the user events data 
     var users = data.users.map((item) => item.toLowerCase());
@@ -260,24 +251,21 @@ app.post('/findFreeTime', (request, response) => {
     var eventsAll = [];
     var count = 0;
     for (var i = 0; i < users.length; i++) {
-        // var pathstring = EVENTSDIR + users[i] + '_events.json';
-        // var content = fs.readFileSync(pathstring, 'utf8')
-        // content = JSON.parse(content);
-        // events = events.concat(content);
         
         gCalAPI.getEvents(users[i], startDate, endDate, (events) => {
             //console.log('events: ' + JSON.stringify(events));
 
-            eventsAll.concat(events);
-            console.log('events so far: ' + JSON.stringify(events));
-            console.log('count so far: ' + count);
+            eventsAll = eventsAll.concat(events);
+            //console.log('events so far: ' + JSON.stringify(events));
+            //console.log('count so far: ' + count);
 
             // wait till all loops finished
             if (count == users.length - 1) {
     
                 // find the free time
+                console.log('Combined events: ' + eventsAll);
                 console.log('finding free time...');
-                var freeTime = dateCalcs.findFreeTime(events, window, length, startDate, endDate);
+                var freeTime = dateCalcs.findFreeTime(eventsAll, window, length, startDate, endDate);
 
                 // convert the time into english words
                 var readout = readoutFreeTime(freeTime);
