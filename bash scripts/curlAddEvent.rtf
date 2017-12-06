@@ -8,27 +8,29 @@
 \f0\fs24 \cf0 \
 #### AWS #####\
 \
-# Short\
-\
-curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler","lwin"],"eventStart":"2017-12-05T09:00:00"\}' http://latchapartments.com:8080/addEvent\
-\
-#Full\
-\
-curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler","lwin"],"eventStart":"2017-12-05T09:00:00","duration":"30","summary":"lunch time!","recur":["TU","TH"]\}' http://latchapartments.com:8080/addEvent\
+2 users\
+curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler","lwin"],"eventStart":"2017-12-05T09:00:00","eventEnd":"2017-12-05T10:00:00","summary":"lunch time!"\}' http://latchapartments.com:8080/addEvent\
 \
 ###### Local ###\
 \
-# Short\
-curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler","lwin"],"eventStart":"2017-12-05T09:00:00"\}' http://localhost:8080/addEvent\
+Test cases:\
 \
-# Full\
-\
+2 users\
 curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler","lwin"],"eventStart":"2017-12-05T09:00:00","eventEnd":"2017-12-05T10:00:00","summary":"lunch time!"\}' http://localhost:8080/addEvent\
 \
-OLD\
-curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler","lwin"],"eventStart":"2017-12-05T09:00:00","duration":"30","summary":"lunch time!","recur":["TU","TH"]\}' http://localhost:8080/addEvent\
+1 user string\
+curl --header "Content-Type:application/json" -X POST -d  '\{"users":"lwin","eventStart":"2017-12-05T09:00:00","eventEnd":"2017-12-05T10:00:00","summary":"lunch time!"\}' http://localhost:8080/addEvent\
 \
-old: \
-curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler","lwin"],"event": \{"summary":"test event", "startDate":"2017-12-04T09:00:00" ,"endDate":"2017-12-04T10:00:00"\}' http://localhost:8080/addEvent\
+1 user array\
+curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler"],"eventStart":"2017-12-05T09:00:00","eventEnd":"2017-12-05T10:00:00","summary":"lunch time!"\}' http://localhost:8080/addEvent\
 \
-Request: \{ users: [user1, user2, etc...], event: \{summary: , startDate: , endDate: \} \}}
+2 users, recurring event 2 days\
+curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler","lwin"],"eventStart":"2017-12-05T09:00:00","eventEnd":"2017-12-05T10:00:00","summary":"lunch time!","recur":"[TU,TH]"\}' http://localhost:8080/addEvent\
+\
+2 users, recurring event 1 day\
+curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler","lwin"],"eventStart":"2017-12-05T09:00:00","eventEnd":"2017-12-05T10:00:00","summary":"lunch time!","recur":"[WE]"\}' http://localhost:8080/addEvent\
+\
+\
+2 users, event far in future\
+curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler","lwin"],"eventStart":"2017-12-05T09:00:00","eventEnd":"2018-02-01T14:00:00","summary":"lunch time!"\}' http://localhost:8080/addEvent\
+}

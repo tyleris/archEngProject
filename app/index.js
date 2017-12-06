@@ -38,7 +38,9 @@ app.use(bodyParser.json());
 //////// Routers ////////////
 /////////////////////////////
 
+////////////////////////
 //// tests ////
+/////////////////////////
 
 app.get('/', (request, response) => {     
     response.send('working \n');
@@ -50,7 +52,9 @@ app.get('/test/:text', (request, response) => {
     response.send('roger that: ' + text + '\n');
 });
 
-//// sign up ////
+////////////////////
+//// sign up - old way with web client ////
+/////////////////////
 
 app.get('/signup', (request, response) => { 
     response.sendFile(path.join(__dirname + '/getCalToken.html'));    
@@ -64,21 +68,44 @@ app.post('/postEvents', (request, response) => {
     response.end('yes');
 });
 
+///////////////////////////
+/////////// sign up - new way with node
+///////////////////////
+
 app.get('/signupNode', (request, response) => {
-    gCalAPI.getGoogleAuthLink(link => {
-        response.redirect(link);
+    console.log('sending signup page to web client');
+    response.sendFile(path.join(__dirname + '/signup.html'));
+});
+
+app.get('/userLink', (request, response) => {
+    console.log('getting google authorization link');
+    gCalAPI.getGoogleAuthLink((link) => {
+        response.send(link);
     })
 });
 
-// { user: , secret: }
-// app.post('/saveToken', (request, response) => {
-//     var user = request.body.user;
-//     var secretCode = request.body.secret;
-//     token = gCalAPI.downloadToken(secretCode, )
-//     fs.writeFile(CREDDIR + user + '_credentials.json', token);
-// })
+// request { user: , secret: }
+app.post('/saveToken', (request, response) => {
+    console.log('saving token');
+    var user = request.body.user;
+    var secretCode = request.body.secret;
+    gCalAPI.downloadToken(secretCode,(token) => {
+        fs.writeFile(CREDDIR + user + '_credentials.json', token,(err) => {
+            if (err) {
+                console.log('failed to save token: ' + err);
+                response.send('failed to save token: ' + err);
+            } else {
+                console.log('successfully saved token');
+                response.send('successfully saved token');
+            }
+        });
+        
+    })
+})
 
+/////////////////////////
 //// get events ////
+///////////////////////
 
 app.get('/displayEvents', (request,response) => {
     response.sendFile(path.join(__dirname + '/eventsDisplay.html'));
@@ -99,31 +126,39 @@ app.get('/displayEvents', (request,response) => {
 app.post('/addEvent', (request, response) => {
     // parse API request
     var data = request.body;
-    console.log('adding event:' + JSON.stringify(data));
+    console.log('adding event: ' + JSON.stringify(data));
 
-    var users = data.users.map((item) => item.toLowerCase());
+    var users;
+    if (typeof data.users == 'string'){
+        users = [data.users.toLowerCase()];
+        
+    } else {
+        users = data.users.map((item) => item.toLowerCase());
+    }
 
     var eventStart = new Date(data.eventStart);
-    eventStart = new Date(eventStart.getTime() + 5 * 60 * 60 * 1000);
+    eventStart = new Date(eventStart.getTime());
     //var duration = data.duration * 60 || '60';
     var eventEnd = new Date(data.eventEnd);
-    eventEnd = new Date(eventEnd.getTime() + 5 * 60 * 60 * 1000);
+    eventEnd = new Date(eventEnd.getTime());
 
     var summary = data.summary || 'Meeting with ' + users.join(', ');
     var recur = data.recur == undefined ? '' : "RRULE:FREQ=WEEKLY;COUNT=15;BYDAY=" + data.recur.join(); 
     //find end time
     
+    console.log('creating event with: \nusers: ' + users + '\nstart: ' + eventStart + '\nend: ' + eventEnd + '\nsummary: ' + summary + '\nrecur: ' + recur);
+
     // Create google api add event request
     var event = {
         summary: data.summary,
         location: '',
         description: '',
         start: {
-            dateTime: eventStart,
+            dateTime: eventStart.toISOString(),
             timeZone: 'America/New_York',
         },
         end: {
-            dateTime: eventEnd,
+            dateTime: eventEnd.toISOString(),
             timeZone: 'America/New_York',
         },
         recurrence: [recur],
@@ -163,8 +198,10 @@ app.post('/addEvent', (request, response) => {
 
     // TODO: remove this once google api working!
     var readout = 'event with ' + userReadout + 'successfully created on ' + readoutDOWTime(eventStart); 
-
+    // 'on ' + readoutDOWTime(eventStart); 
+    
     var outcome = { outcome: 'success', readout: readout }
+    console.log('reading out: ' + JSON.stringify(outcome));
     response.send(outcome);
 });
 
