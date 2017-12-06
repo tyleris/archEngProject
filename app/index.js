@@ -210,26 +210,6 @@ function readoutDOWTime(date){
     return dow + 'at ' + time;
 }
 
-// format changed
-// //input hh:mm
-// function timeReadout(hhmm){
-//     var h = hhmm.substring(0,2);
-//     console.log(h);
-//     var suffix = getSuffixWord(h);
-//     var hOut = getHoursWord(h);
-//     console.log(hOut);
-//     var minTens = hhmm.substring(3,4);
-//     console.log(minTens);
-//     var tensOut = getTensWord(minTens); 
-//     console.log(tensOut);
-//     var minOnes = hhmm.substring(4,5);
-//     console.log(minOnes);
-//     var onesOut = getOnesWord(minOnes);
-//     console.log(onesOut);
-
-//     return hOut + minTens + onesOut + suffix 
-// }
-
 /////////////////////
 ///////////// find free time
 ////////////////////

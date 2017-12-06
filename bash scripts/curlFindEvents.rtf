@@ -8,16 +8,26 @@
 \f0\fs24 \cf0 \
 ####### server ##########\
 \
-curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler","lwin"],"window": "lunch"\}'  latchapartments.com:8080/findFreeTime\
+curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler","lwin"],"window":"morning","dateStart":"2017-12-06T12:30:00"\}' http://latchapartments.com:8080/findFreeTime\
+\
 \
 test\
 curl http://localhost:8080/\
 \
 ########### local ###########\
 \
-local - date start\
+one day\
 \
 curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler","lwin"],"window":"morning","dateStart":"2017-12-06T12:30:00"\}' http://localhost:8080/findFreeTime\
+\
+default 7 days\
+\
+\
+date range\
+\
+curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler","lwin"],"window":"morning","dateRange":\{"start":,"end":\}\}' http://localhost:8080/findFreeTime\
+\
+\
 \
 local - full\
 \
