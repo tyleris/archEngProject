@@ -1,0 +1,54 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1561\cocoasubrtf100
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\margl1440\margr1440\vieww12800\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 \
+####### server ##########\
+\
+curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler","lwin"],"window":"morning","dateStart":"2017-12-06T12:30:00"\}' http://latchapartments.com:8080/findFreeTime\
+\
+one day - Monday\
+curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler","lwin"],"window":"morning","dateStart":"2017-12-11T12:30:00"\}' http://latchapartments.com:8080/findFreeTime\
+\
+one day - wednesday\
+curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler","lwin"],"window":"morning","dateStart":"2017-12-11T12:30:00"\}' http://latchapartments.com:8080/findFreeTime\
+\
+\
+\
+test\
+curl http://localhost:8080/\
+\
+########### local ###########\
+\
+one day\
+\
+curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler","lwin"],"window":"morning","dateStart":"2017-12-06T12:30:00"\}' http://localhost:8080/findFreeTime\
+\
+curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler","lwin"],"window":"morning","dateStart":"2017-12-11T12:30:00"\}' http://localhost:8080/findFreeTime\
+\
+wednesday\
+curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler","lwin"],"window":"morning","dateStart":"2017-12-06T12:30:00"\}' http://localhost:8080/findFreeTime\
+\
+\
+\
+default 7 days\
+\
+\
+date range\
+\
+curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler","lwin"],"window":"morning","dateRange":\{"start":,"end":\}\}' http://localhost:8080/findFreeTime\
+\
+\
+\
+local - full\
+\
+curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tis","tyler"],"window":\{"start":"2017-11-14T00:00:00","end":"2017-11-15T00:00:00"\}\}' http://localhost:8080/findFreeTime\
+\
+local - default range\
+curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler","lwin"],"window": "lunch"\}' http://localhost:8080/findFreeTime\
+\
+curl --header "Content-Type:application/json" -X POST -d  '\{"users":["tyler","lwin"],"window": "lunch", "length":"30", "dateRange":\{"start":"2017-11-30T09:00:00","end":"2017-12-5T24:00:00" \}' http://localhost:8080/findFreeTime\
+}
